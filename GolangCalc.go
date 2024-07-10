@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,45 +9,41 @@ import (
 )
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Error:", r)
+		}
+	}()
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Input:")
 	expression, _ := reader.ReadString('\n')
 	expression = strings.TrimSpace(expression)
-	answer, err := calc(expression)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	answer := calc(expression)
 
 	fmt.Println("Output:\n" + answer)
 }
 
-func calc(input string) (string, error) {
+func calc(input string) string {
 	var isRoman bool
 	var result int
 
 	inputSplit := strings.Fields(input)
 	if len(inputSplit) != 3 {
-		return "", errors.New("Неверно введённое выражение")
+		panic("Неверно введённое выражение")
 	}
 
 	firstNumber, err := strconv.Atoi(inputSplit[0])
 	secondNumber, err2 := strconv.Atoi(inputSplit[2])
 
 	if err != nil || err2 != nil {
-		firstNumber, err = romanToArab(inputSplit[0])
-		if err != nil {
-			return "", errors.New("Ошибка считывания цифр")
-		}
-		secondNumber, err = romanToArab(inputSplit[2])
-		if err != nil {
-			return "", errors.New("Ошибка считывания цифр")
-		}
+		firstNumber = romanToArab(inputSplit[0])
+		secondNumber = romanToArab(inputSplit[2])
 		isRoman = true
 	}
 
 	if firstNumber < 1 || firstNumber > 10 || secondNumber < 1 || secondNumber > 10 {
-		return "", errors.New("Введенные числа выходят из диапазона ожидаемых")
+		panic("Введенные числа выходят из диапазона ожидаемых")
 	}
 
 	sign := inputSplit[1]
@@ -62,19 +57,19 @@ func calc(input string) (string, error) {
 	case "/":
 		result = firstNumber / secondNumber
 	default:
-		return "", errors.New("Неверно введен арифметический знак")
+		panic("Неверно введен арифметический знак")
 	}
 
 	if isRoman {
 		if result < 1 {
-			return "", errors.New("Результат меньше 1, невозможно конвертировать в римские")
+			panic("Результат меньше 1, невозможно конвертировать в римские")
 		}
-		return arabToRome(result), nil
+		return arabToRome(result)
 	}
-	return strconv.Itoa(result), nil
+	return strconv.Itoa(result)
 }
 
-func romanToArab(romanInput string) (int, error) {
+func romanToArab(romanInput string) int {
 	arab := []int{10, 9, 5, 4, 1}
 	roman := []string{"X", "IX", "V", "IV", "I"}
 	result := 0
@@ -86,9 +81,9 @@ func romanToArab(romanInput string) (int, error) {
 		}
 	}
 	if len(romanInput) > 0 {
-		return 0, errors.New("Неверный римский символ")
+		panic("Неверный римский символ")
 	}
-	return result, nil
+	return result
 }
 
 func arabToRome(arabInput int) string {
